@@ -8,9 +8,9 @@ import (
 
 	"github.com/ipfs/go-cid"
 	blockstore "github.com/ipfs/go-ipfs-blockstore"
+	logging "github.com/ipfs/go-log/v2"
 	"github.com/ipld/go-car"
 	"github.com/ipld/go-ipld-prime"
-	"github.com/prometheus/common/log"
 	"golang.org/x/xerrors"
 
 	ffi "github.com/filecoin-project/filecoin-ffi"
@@ -18,6 +18,8 @@ import (
 	"github.com/filecoin-project/go-padreader"
 	"github.com/filecoin-project/go-state-types/abi"
 )
+
+var log = logging.Logger("pieceio")
 
 type PreparedCar interface {
 	Size() uint64

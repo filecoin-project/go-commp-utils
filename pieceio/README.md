@@ -6,7 +6,7 @@ storing pieces for storage market deals. It is used by the
 
 ## Installation
 ```bash
-go get github.com/filecoin-project/go-fil-markets/pieceio
+go get github.com/filecoin-project/go-commp-utils/pieceio
 ```
 
 ## PieceIO
@@ -20,24 +20,6 @@ func NewPieceIO(carIO CarIO, bs blockstore.Blockstore) PieceIO
 ```
 **Parameters**
 * `carIO` is a [CarIO](#CarIO) from this module
-* `bs` is an IPFS blockstore for storing and retrieving data for deals. See
- [github.com/ipfs/go-ipfs-blockstore](github.com/ipfs/go-ipfs-blockstore).
-
-## PieceIOWithStore
-`PieceIOWithStore` is `PieceIO` with a [`filestore`](../filestore). It is used by 
-[`storagemarket`](../storagemarket) provider to store pieces, and to generate and store piece commitments
- and piece metadata for deals. 
- 
-**To initialize a PieceIOWithStore:**
-
-```go
-package pieceio
-
-func NewPieceIOWithStore(carIO CarIO, store filestore.FileStore, bs blockstore.Blockstore) PieceIOWithStore
-```
-**Parameters**
-* `carIO` is a [CarIO](#CarIO) from this module
-* `store` is a [FileStore](../filestore) from this go-fil-markets repo.
 * `bs` is an IPFS blockstore for storing and retrieving data for deals. See
  [github.com/ipfs/go-ipfs-blockstore](github.com/ipfs/go-ipfs-blockstore).
 

@@ -20,9 +20,9 @@ import (
 	"github.com/filecoin-project/go-padreader"
 	"github.com/filecoin-project/go-state-types/abi"
 
-	"github.com/filecoin-project/go-fil-markets/pieceio"
-	"github.com/filecoin-project/go-fil-markets/pieceio/cario"
-	pmocks "github.com/filecoin-project/go-fil-markets/pieceio/mocks"
+	"github.com/filecoin-project/go-commp-utils/pieceio"
+	"github.com/filecoin-project/go-commp-utils/pieceio/cario"
+	pmocks "github.com/filecoin-project/go-commp-utils/pieceio/mocks"
 )
 
 func Test_ThereAndBackAgain(t *testing.T) {
