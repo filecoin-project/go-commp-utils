@@ -20,6 +20,7 @@ import (
 	"github.com/filecoin-project/go-padreader"
 	"github.com/filecoin-project/go-state-types/abi"
 
+	"github.com/filecoin-project/go-commp-utils/ffiwrapper"
 	"github.com/filecoin-project/go-commp-utils/pieceio"
 	"github.com/filecoin-project/go-commp-utils/pieceio/cario"
 	pmocks "github.com/filecoin-project/go-commp-utils/pieceio/mocks"
@@ -132,7 +133,7 @@ func Test_StoreRestoreMemoryBuffer(t *testing.T) {
 
 	paddedReader, secondPaddedSize := padreader.New(r, pieceSize)
 	require.Equal(t, paddedSize, secondPaddedSize)
-	secondCommitment, err := pieceio.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg2KiBV1, paddedReader, paddedSize)
+	secondCommitment, err := ffiwrapper.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg2KiBV1, paddedReader, paddedSize)
 	require.NoError(t, err)
 	require.Equal(t, commitment, secondCommitment)
 	require.NoError(t, r.Close())

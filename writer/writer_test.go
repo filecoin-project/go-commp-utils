@@ -1,4 +1,4 @@
-package commp
+package writer
 
 import (
 	"bytes"
