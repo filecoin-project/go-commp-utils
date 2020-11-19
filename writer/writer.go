@@ -11,10 +11,15 @@ import (
 	"github.com/filecoin-project/go-padreader"
 	"github.com/filecoin-project/go-state-types/abi"
 
-	"github.com/filecoin-project/lotus/api"
-	"github.com/filecoin-project/lotus/extern/sector-storage/ffiwrapper"
-	"github.com/filecoin-project/lotus/extern/sector-storage/zerocomm"
+	"github.com/filecoin-project/go-commp-utils/ffiwrapper"
+	"github.com/filecoin-project/go-commp-utils/zerocomm"
 )
+
+type DataCIDSize struct {
+	PayloadSize int64
+	PieceSize   abi.PaddedPieceSize
+	PieceCID    cid.Cid
+}
 
 const commPBufPad = abi.PaddedPieceSize(8 << 20)
 const CommPBuf = abi.UnpaddedPieceSize(commPBufPad - (commPBufPad / 128)) // can't use .Unpadded() for const
@@ -49,7 +54,7 @@ func (w *Writer) Write(p []byte) (int, error) {
 	return n, nil
 }
 
-func (w *Writer) Sum() (api.DataCIDSize, error) {
+func (w *Writer) Sum() (DataCIDSize, error) {
 	// process last non-zero leaf if exists
 	lastLen := w.len % int64(len(w.buf))
 	rawLen := w.len
@@ -64,11 +69,11 @@ func (w *Writer) Sum() (api.DataCIDSize, error) {
 		r, sz := padreader.New(bytes.NewReader(w.buf[:lastLen]), uint64(lastLen))
 		p, err := ffiwrapper.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1, r, sz)
 		if err != nil {
-			return api.DataCIDSize{}, err
+			return DataCIDSize{}, err
 		}
 
 		if sz < CommPBuf { // special case for pieces smaller than 16MiB
-			return api.DataCIDSize{
+			return DataCIDSize{
 				PayloadSize: w.len,
 				PieceSize:   sz.Padded(),
 				PieceCID:    p,
@@ -85,7 +90,7 @@ func (w *Writer) Sum() (api.DataCIDSize, error) {
 	}
 
 	if len(w.leaves) == 1 {
-		return api.DataCIDSize{
+		return DataCIDSize{
 			PayloadSize: rawLen,
 			PieceSize:   abi.PaddedPieceSize(len(w.leaves)) * commPBufPad,
 			PieceCID:    w.leaves[0],
@@ -102,10 +107,10 @@ func (w *Writer) Sum() (api.DataCIDSize, error) {
 
 	p, err := ffi.GenerateUnsealedCID(abi.RegisteredSealProof_StackedDrg32GiBV1, pieces)
 	if err != nil {
-		return api.DataCIDSize{}, xerrors.Errorf("generating unsealed CID: %w", err)
+		return DataCIDSize{}, xerrors.Errorf("generating unsealed CID: %w", err)
 	}
 
-	return api.DataCIDSize{
+	return DataCIDSize{
 		PayloadSize: rawLen,
 		PieceSize:   abi.PaddedPieceSize(len(w.leaves)) * commPBufPad,
 		PieceCID:    p,
