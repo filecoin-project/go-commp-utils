@@ -3,6 +3,7 @@ package writer
 import (
 	"bytes"
 	"math/bits"
+	"runtime"
 
 	"github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
@@ -24,13 +25,31 @@ type DataCIDSize struct {
 const commPBufPad = abi.PaddedPieceSize(8 << 20)
 const CommPBuf = abi.UnpaddedPieceSize(commPBufPad - (commPBufPad / 128)) // can't use .Unpadded() for const
 
+type ciderr struct {
+	c   cid.Cid
+	err error
+}
+
 type Writer struct {
 	len    int64
 	buf    [CommPBuf]byte
-	leaves []cid.Cid
+	leaves []chan ciderr
+
+	tbufs [][CommPBuf]byte
+	throttle chan int
 }
 
 func (w *Writer) Write(p []byte) (int, error) {
+	if w.throttle == nil {
+		w.throttle = make(chan int, runtime.NumCPU())
+		for i := 0; i < cap(w.throttle); i++ {
+			w.throttle <- i
+		}
+	}
+	if w.tbufs == nil {
+		w.tbufs = make([][CommPBuf]byte, cap(w.throttle))
+	}
+
 	n := len(p)
 	for len(p) > 0 {
 		buffered := int(w.len % int64(len(w.buf)))
@@ -44,10 +63,22 @@ func (w *Writer) Write(p []byte) (int, error) {
 		w.len += int64(copied)
 
 		if copied > 0 && w.len%int64(len(w.buf)) == 0 {
-			leaf, err := ffiwrapper.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1, bytes.NewReader(w.buf[:]), CommPBuf)
-			if err != nil {
-				return 0, err
-			}
+			leaf := make(chan ciderr, 1)
+			bufIdx := <-w.throttle
+			copy(w.tbufs[bufIdx][:], w.buf[:])
+
+			go func() {
+				defer func() {
+					w.throttle <- bufIdx
+				}()
+
+				l, err := ffiwrapper.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1, bytes.NewReader(w.tbufs[bufIdx][:]), CommPBuf)
+				leaf <- ciderr{
+					c:   l,
+					err: err,
+				}
+			}()
+
 			w.leaves = append(w.leaves, leaf)
 		}
 	}
@@ -59,9 +90,18 @@ func (w *Writer) Sum() (DataCIDSize, error) {
 	lastLen := w.len % int64(len(w.buf))
 	rawLen := w.len
 
+	leaves := make([]cid.Cid, len(w.leaves))
+	for i, leaf := range w.leaves {
+		r := <- leaf
+		if r.err != nil {
+			return DataCIDSize{}, xerrors.Errorf("processing leaf %d: %w", i, r.err)
+		}
+		leaves[i] = r.c
+	}
+
 	// process remaining bit of data
 	if lastLen != 0 {
-		if len(w.leaves) != 0 {
+		if len(leaves) != 0 {
 			copy(w.buf[lastLen:], make([]byte, int(int64(CommPBuf)-lastLen)))
 			lastLen = int64(CommPBuf)
 		}
@@ -80,25 +120,25 @@ func (w *Writer) Sum() (DataCIDSize, error) {
 			}, nil
 		}
 
-		w.leaves = append(w.leaves, p)
+		leaves = append(leaves, p)
 	}
 
 	// pad with zero pieces to power-of-two size
-	fillerLeaves := (1 << (bits.Len(uint(len(w.leaves) - 1)))) - len(w.leaves)
+	fillerLeaves := (1 << (bits.Len(uint(len(leaves) - 1)))) - len(leaves)
 	for i := 0; i < fillerLeaves; i++ {
-		w.leaves = append(w.leaves, zerocomm.ZeroPieceCommitment(CommPBuf))
+		leaves = append(leaves, zerocomm.ZeroPieceCommitment(CommPBuf))
 	}
 
-	if len(w.leaves) == 1 {
+	if len(leaves) == 1 {
 		return DataCIDSize{
 			PayloadSize: rawLen,
-			PieceSize:   abi.PaddedPieceSize(len(w.leaves)) * commPBufPad,
-			PieceCID:    w.leaves[0],
+			PieceSize:   abi.PaddedPieceSize(len(leaves)) * commPBufPad,
+			PieceCID:    leaves[0],
 		}, nil
 	}
 
-	pieces := make([]abi.PieceInfo, len(w.leaves))
-	for i, leaf := range w.leaves {
+	pieces := make([]abi.PieceInfo, len(leaves))
+	for i, leaf := range leaves {
 		pieces[i] = abi.PieceInfo{
 			Size:     commPBufPad,
 			PieceCID: leaf,
@@ -112,7 +152,7 @@ func (w *Writer) Sum() (DataCIDSize, error) {
 
 	return DataCIDSize{
 		PayloadSize: rawLen,
-		PieceSize:   abi.PaddedPieceSize(len(w.leaves)) * commPBufPad,
+		PieceSize:   abi.PaddedPieceSize(len(leaves)) * commPBufPad,
 		PieceCID:    p,
 	}, nil
 }
