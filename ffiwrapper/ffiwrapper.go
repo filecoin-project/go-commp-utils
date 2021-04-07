@@ -6,6 +6,7 @@ import (
 	"sync"
 
 	ffi "github.com/filecoin-project/filecoin-ffi"
+	"github.com/filecoin-project/go-commp-utils/zerocomm"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/ipfs/go-cid"
 	logging "github.com/ipfs/go-log/v2"
@@ -72,4 +73,31 @@ func GeneratePieceCIDFromFile(proofType abi.RegisteredSealProof, piece io.Reader
 	}
 
 	return pieceCID, werr()
+}
+
+func ZeroPadPieceCommitment(c cid.Cid, curSize abi.UnpaddedPieceSize, toSize abi.UnpaddedPieceSize) (cid.Cid, error) {
+	cur := c
+	for curSize < toSize {
+
+		zc := zerocomm.ZeroPieceCommitment(curSize)
+
+		p, err := ffi.GenerateUnsealedCID(abi.RegisteredSealProof_StackedDrg32GiBV1, []abi.PieceInfo{
+			abi.PieceInfo{
+				Size:     curSize.Padded(),
+				PieceCID: cur,
+			},
+			abi.PieceInfo{
+				Size:     curSize.Padded(),
+				PieceCID: zc,
+			},
+		})
+		if err != nil {
+			return cid.Undef, err
+		}
+
+		cur = p
+		curSize = curSize * 2
+	}
+
+	return cur, nil
 }
