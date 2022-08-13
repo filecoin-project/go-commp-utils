@@ -12,50 +12,65 @@ import (
 	sha256simd "github.com/minio/sha256-simd"
 )
 
-func GenerateUnsealedCID(proofType abi.RegisteredSealProof, pieces []abi.PieceInfo) (cid.Cid, error) {
+type stackFrame struct {
+	size  uint64
+	commP []byte
+}
+
+func GenerateUnsealedCID(proofType abi.RegisteredSealProof, pieceInfos []abi.PieceInfo) (cid.Cid, error) {
 	spi, found := abi.SealProofInfos[proofType]
 	if !found {
 		return cid.Undef, fmt.Errorf("unknown seal proof type %d", proofType)
 	}
-	if len(pieces) == 0 {
+	if len(pieceInfos) == 0 {
 		return cid.Undef, errors.New("no pieces provided")
 	}
 
-	maxSize := abi.PaddedPieceSize(spi.SectorSize)
+	maxSize := uint64(spi.SectorSize)
+
+	todo := make([]stackFrame, len(pieceInfos))
 
 	// sancheck everything
-	for i, p := range pieces {
+	for i, p := range pieceInfos {
 		if p.Size < 128 {
 			return cid.Undef, fmt.Errorf("invalid Size of PieceInfo %d: value %d is too small", i, p.Size)
 		}
-		if pieces[i].Size > maxSize {
+		if uint64(p.Size) > maxSize {
 			return cid.Undef, fmt.Errorf("invalid Size of PieceInfo %d: value %d is larger than sector size of SealProofType %d", i, p.Size, proofType)
 		}
 		if bits.OnesCount64(uint64(p.Size)) != 1 {
 			return cid.Undef, fmt.Errorf("invalid Size of PieceInfo %d: value %d is not a power of 2", i, p.Size)
 		}
-		if _, err := commcid.CIDToPieceCommitmentV1(p.PieceCID); err != nil {
+
+		cp, err := commcid.CIDToPieceCommitmentV1(p.PieceCID)
+		if err != nil {
 			return cid.Undef, fmt.Errorf("invalid PieceCid for PieceInfo %d: %w", i, err)
 		}
+		todo[i] = stackFrame{size: uint64(p.Size), commP: cp}
 	}
 
 	// reimplement https://github.com/filecoin-project/rust-fil-proofs/blob/380d6437c2/filecoin-proofs/src/pieces.rs#L85-L145
 	stack := append(
-		make([]abi.PieceInfo, 0, 32),
-		pieces[0],
+		make(
+			[]stackFrame,
+			0,
+			32,
+		),
+		todo[0],
 	)
 
-	for i := 1; i < len(pieces); i++ {
+	for _, f := range todo[1:] {
 
-		for stack[len(stack)-1].Size < pieces[i].Size {
-			lastSize := stack[len(stack)-1].Size
+		// pre-pad if needed to balance the left limb
+		for stack[len(stack)-1].size < f.size {
+			lastSize := stack[len(stack)-1].size
 
 			stack = reduceStack(
 				append(
 					stack,
-					abi.PieceInfo{
-						Size:     lastSize,
-						PieceCID: zerocomm.ZeroPieceCommitment(lastSize.Unpadded()),
+					stackFrame{
+						size:  lastSize,
+						commP: zeroCommForSize(lastSize),
 					},
 				),
 			)
@@ -64,51 +79,47 @@ func GenerateUnsealedCID(proofType abi.RegisteredSealProof, pieces []abi.PieceIn
 		stack = reduceStack(
 			append(
 				stack,
-				pieces[i],
+				f,
 			),
 		)
 	}
 
 	for len(stack) > 1 {
-		lastSize := stack[len(stack)-1].Size
+		lastSize := stack[len(stack)-1].size
 		stack = reduceStack(
 			append(
 				stack,
-				abi.PieceInfo{
-					Size:     lastSize,
-					PieceCID: zerocomm.ZeroPieceCommitment(lastSize.Unpadded()),
+				stackFrame{
+					size:  lastSize,
+					commP: zeroCommForSize(lastSize),
 				},
 			),
 		)
 	}
 
-	if stack[0].Size > maxSize {
-		return cid.Undef, fmt.Errorf("provided pieces sum up to %d bytes, which is larger than sector size of SealProofType %d", stack[0].Size, proofType)
+	if stack[0].size > maxSize {
+		return cid.Undef, fmt.Errorf("provided pieces sum up to %d bytes, which is larger than sector size of SealProofType %d", stack[0].size, proofType)
 	}
 
-	return stack[0].PieceCID, nil
+	return commcid.PieceCommitmentV1ToCID(stack[0].commP)
 }
 
 var s256 = sha256simd.New()
 
-func reduceStack(s []abi.PieceInfo) []abi.PieceInfo {
-	for {
-		if len(s) < 2 || s[len(s)-2].Size != s[len(s)-1].Size {
-			break
-		}
+func zeroCommForSize(s uint64) []byte { return zerocomm.PieceComms[bits.TrailingZeros64(s)-7][:] }
 
-		l, _ := commcid.CIDToPieceCommitmentV1(s[len(s)-2].PieceCID)
-		r, _ := commcid.CIDToPieceCommitmentV1(s[len(s)-1].PieceCID)
+func reduceStack(s []stackFrame) []stackFrame {
+	for len(s) > 1 && s[len(s)-2].size == s[len(s)-1].size {
+
 		s256.Reset()
-		s256.Write(l)
-		s256.Write(r)
+		s256.Write(s[len(s)-2].commP)
+		s256.Write(s[len(s)-1].commP)
 		d := s256.Sum(make([]byte, 0, 32))
 		d[31] &= 0b00111111
-		newPiece, _ := commcid.PieceCommitmentV1ToCID(d)
 
-		s[len(s)-2] = abi.PieceInfo{
-			Size:     2 * s[len(s)-2].Size,
-			PieceCID: newPiece,
+		s[len(s)-2] = stackFrame{
+			size:  2 * s[len(s)-2].size,
+			commP: d,
 		}
 
 		s = s[:len(s)-1]
