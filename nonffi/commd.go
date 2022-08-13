@@ -1,6 +1,7 @@
 package nonffi
 
 import (
+	"errors"
 	"fmt"
 	"math/bits"
 
@@ -16,18 +17,18 @@ func GenerateUnsealedCID(proofType abi.RegisteredSealProof, pieces []abi.PieceIn
 	if !found {
 		return cid.Undef, fmt.Errorf("unknown seal proof type %d", proofType)
 	}
-
-	target := abi.PaddedPieceSize(spi.SectorSize)
 	if len(pieces) == 0 {
-		return zerocomm.ZeroPieceCommitment(target.Unpadded()), nil
+		return cid.Undef, errors.New("no pieces provided")
 	}
+
+	maxSize := abi.PaddedPieceSize(spi.SectorSize)
 
 	// sancheck everything
 	for i, p := range pieces {
 		if p.Size < 128 {
 			return cid.Undef, fmt.Errorf("invalid Size of PieceInfo %d: value %d is too small", i, p.Size)
 		}
-		if pieces[i].Size > target {
+		if pieces[i].Size > maxSize {
 			return cid.Undef, fmt.Errorf("invalid Size of PieceInfo %d: value %d is larger than sector size of SealProofType %d", i, p.Size, proofType)
 		}
 		if bits.OnesCount64(uint64(p.Size)) != 1 {
@@ -68,7 +69,7 @@ func GenerateUnsealedCID(proofType abi.RegisteredSealProof, pieces []abi.PieceIn
 		)
 	}
 
-	for len(stack) > 1 || stack[0].Size < target {
+	for len(stack) > 1 {
 		lastSize := stack[len(stack)-1].Size
 		stack = reduceStack(
 			append(
@@ -81,7 +82,7 @@ func GenerateUnsealedCID(proofType abi.RegisteredSealProof, pieces []abi.PieceIn
 		)
 	}
 
-	if stack[0].Size > target {
+	if stack[0].Size > maxSize {
 		return cid.Undef, fmt.Errorf("provided pieces sum up to %d bytes, which is larger than sector size of SealProofType %d", stack[0].Size, proofType)
 	}
 

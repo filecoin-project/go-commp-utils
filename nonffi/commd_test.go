@@ -3,6 +3,7 @@ package nonffi
 import (
 	"testing"
 
+	"github.com/filecoin-project/go-commp-utils/zerocomm"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/ipfs/go-cid"
 )
@@ -37,6 +38,10 @@ func TestGenerateUnsealedCID(t *testing.T) {
 			{PieceCID: cidMustParse("baga6ea4seaqa3qbabsbmvk5er6rhsjzt74beplzgulthamm22jue4zgqcuszofi"), Size: 1024 << 20}, // https://filfox.info/en/deal/3755803
 			{PieceCID: cidMustParse("baga6ea4seaqiekvf623muj6jpxg6vsqaikyw3r4ob5u7363z7zcaixqvfqsc2ji"), Size: 256 << 20},  // https://filfox.info/en/deal/3755883
 			{PieceCID: cidMustParse("baga6ea4seaqhsewv65z2d4m5o4vo65vl5o6z4bcegdvgnusvlt7rao44gro36pi"), Size: 512 << 20},  // https://filfox.info/en/deal/3755882
+
+			// GenerateUnsealedCID does not "fill a sector", do it here to match the SP provided sector commD
+			{PieceCID: zerocomm.ZeroPieceCommitment(abi.PaddedPieceSize(8 << 30).Unpadded()), Size: 8 << 30},
+			{PieceCID: zerocomm.ZeroPieceCommitment(abi.PaddedPieceSize(16 << 30).Unpadded()), Size: 16 << 30},
 		},
 	)
 
