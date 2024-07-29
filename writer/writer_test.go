@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -53,7 +52,7 @@ func TestWriterZero(t *testing.T) {
 
 func TestWriterData(t *testing.T) {
 	dataLen := float64(CommPBuf) * 6.78
-	data, _ := ioutil.ReadAll(io.LimitReader(rand.Reader, int64(dataLen)))
+	data, _ := io.ReadAll(io.LimitReader(rand.Reader, int64(dataLen)))
 
 	pr, sz := padreader.New(bytes.NewReader(data), uint64(dataLen))
 	exp, err := ffiwrapper.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1, pr, sz)
