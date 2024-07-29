@@ -35,7 +35,7 @@ type Writer struct {
 	buf    [CommPBuf]byte
 	leaves []chan ciderr
 
-	tbufs [][CommPBuf]byte
+	tbufs    [][CommPBuf]byte
 	throttle chan int
 }
 
@@ -92,7 +92,7 @@ func (w *Writer) Sum() (DataCIDSize, error) {
 
 	leaves := make([]cid.Cid, len(w.leaves))
 	for i, leaf := range w.leaves {
-		r := <- leaf
+		r := <-leaf
 		if r.err != nil {
 			return DataCIDSize{}, xerrors.Errorf("processing leaf %d: %w", i, r.err)
 		}
