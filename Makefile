@@ -16,7 +16,7 @@ FFI_DEPS:=$(addprefix $(FFI_PATH),$(FFI_DEPS))
 $(FFI_DEPS): build/.filecoin-ffi-install ;
 
 # dummy file that marks the last time the filecoin-ffi project was built
-build/.filecoin-ffi-install: $(FFI_PATH)
+build/.filecoin-ffi-install: build $(FFI_PATH)
 	$(MAKE) -C $(FFI_PATH) $(FFI_DEPS:$(FFI_PATH)%=%)
 	@touch $@
 
@@ -27,7 +27,7 @@ CLEAN+=build/.filecoin-ffi-install
 $(SUBMODULES): build/.update-submodules ;
 
 # dummy file that marks the last time submodules were updated
-build/.update-submodules:
+build/.update-submodules: build
 	git submodule update --init --recursive
 	touch $@
 
@@ -53,3 +53,8 @@ clean:
 	rm -rf $(CLEAN)
 	-$(MAKE) -C $(FFI_PATH) clean
 .PHONY: clean
+
+# Rule to create the build directory if it doesn't exist
+build:
+	mkdir -p build
+.PHONY: build
