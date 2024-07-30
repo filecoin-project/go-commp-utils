@@ -1,9 +1,10 @@
-package ffiwrapper
+package commp_test
 
 import (
 	"bytes"
 	"testing"
 
+	"github.com/filecoin-project/go-commp-utils"
 	"github.com/filecoin-project/go-state-types/abi"
 	"github.com/ipfs/go-cid"
 )
@@ -15,7 +16,7 @@ func TestZeroPadding(t *testing.T) {
 	content := []byte("i am the biggest cat, what do you think about that")
 	copy(data, content)
 
-	pcid, err := GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1_1, bytes.NewReader(data), psize)
+	pcid, err := commp.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1_1, bytes.NewReader(data), psize)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -30,7 +31,7 @@ func TestZeroPadding(t *testing.T) {
 		t.Fatalf("expected %s, got %s", expCid, pcid)
 	}
 
-	padded, err := ZeroPadPieceCommitment(pcid, psize, psize*4)
+	padded, err := commp.ZeroPadPieceCommitment(pcid, psize, psize*4)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -38,7 +39,7 @@ func TestZeroPadding(t *testing.T) {
 	data2 := make([]byte, psize*4)
 	copy(data2, content)
 
-	padExpCid, err := GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1_1, bytes.NewReader(data2), psize*4)
+	padExpCid, err := commp.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1_1, bytes.NewReader(data2), psize*4)
 	if err != nil {
 		t.Fatal(err)
 	}

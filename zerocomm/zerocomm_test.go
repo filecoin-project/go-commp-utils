@@ -6,11 +6,11 @@ import (
 	"io"
 	"testing"
 
+	"github.com/filecoin-project/go-commp-utils"
 	commcid "github.com/filecoin-project/go-fil-commcid"
 	abi "github.com/filecoin-project/go-state-types/abi"
 	"github.com/ipfs/go-cid"
 
-	"github.com/filecoin-project/go-commp-utils/ffiwrapper"
 	"github.com/filecoin-project/go-commp-utils/zerocomm"
 )
 
@@ -20,7 +20,7 @@ func TestComms(t *testing.T) {
 	var expPieceComms [zerocomm.Levels - zerocomm.Skip]cid.Cid
 
 	{
-		l2, err := ffiwrapper.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg2KiBV1, bytes.NewReader(make([]byte, 127)), 127)
+		l2, err := commp.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg2KiBV1, bytes.NewReader(make([]byte, 127)), 127)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -33,7 +33,7 @@ func TestComms(t *testing.T) {
 		fmt.Println(i, sz)
 		r := io.LimitReader(&NullReader{}, int64(sz))
 
-		expPieceComms[i], err = ffiwrapper.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg2KiBV1, r, sz)
+		expPieceComms[i], err = commp.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg2KiBV1, r, sz)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -59,7 +59,7 @@ func TestCommsSmall(t *testing.T) {
 	lvls := len(expPieceComms) + zerocomm.Skip
 
 	{
-		l2, err := ffiwrapper.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg2KiBV1, bytes.NewReader(make([]byte, 127)), 127)
+		l2, err := commp.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg2KiBV1, bytes.NewReader(make([]byte, 127)), 127)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -72,7 +72,7 @@ func TestCommsSmall(t *testing.T) {
 		fmt.Println(i, sz)
 		r := io.LimitReader(&NullReader{}, int64(sz))
 
-		expPieceComms[i], err = ffiwrapper.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg2KiBV1, r, sz)
+		expPieceComms[i], err = commp.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg2KiBV1, r, sz)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -94,7 +94,7 @@ func TestCommsSmall(t *testing.T) {
 }
 
 func TestForSise(t *testing.T) {
-	exp, err := ffiwrapper.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg2KiBV1, bytes.NewReader(make([]byte, 1016)), 1016)
+	exp, err := commp.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg2KiBV1, bytes.NewReader(make([]byte, 1016)), 1016)
 	if err != nil {
 		return
 	}

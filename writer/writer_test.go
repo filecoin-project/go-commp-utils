@@ -9,10 +9,10 @@ import (
 
 	"github.com/stretchr/testify/require"
 
+	"github.com/filecoin-project/go-commp-utils"
 	"github.com/filecoin-project/go-padreader"
 	"github.com/filecoin-project/go-state-types/abi"
 
-	"github.com/filecoin-project/go-commp-utils/ffiwrapper"
 	"github.com/filecoin-project/go-commp-utils/zerocomm"
 )
 
@@ -55,7 +55,7 @@ func TestWriterData(t *testing.T) {
 	data, _ := io.ReadAll(io.LimitReader(rand.Reader, int64(dataLen)))
 
 	pr, sz := padreader.New(bytes.NewReader(data), uint64(dataLen))
-	exp, err := ffiwrapper.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1, pr, sz)
+	exp, err := commp.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1, pr, sz)
 	require.NoError(t, err)
 
 	w := &Writer{}
