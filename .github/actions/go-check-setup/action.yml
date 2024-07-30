@@ -1,6 +1,0 @@
-runs:
-  using: "composite"
-  steps:
-    - name: Setup dependencies
-      shell: bash
-      run: make deps
