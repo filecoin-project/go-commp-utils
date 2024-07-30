@@ -8,11 +8,11 @@ import (
 	"github.com/ipfs/go-cid"
 	"golang.org/x/xerrors"
 
-	ffi "github.com/filecoin-project/filecoin-ffi"
 	"github.com/filecoin-project/go-padreader"
 	"github.com/filecoin-project/go-state-types/abi"
 
-	"github.com/filecoin-project/go-commp-utils/ffiwrapper"
+	commp "github.com/filecoin-project/go-commp-utils"
+	"github.com/filecoin-project/go-commp-utils/nonffi"
 	"github.com/filecoin-project/go-commp-utils/zerocomm"
 )
 
@@ -72,7 +72,7 @@ func (w *Writer) Write(p []byte) (int, error) {
 					w.throttle <- bufIdx
 				}()
 
-				l, err := ffiwrapper.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1, bytes.NewReader(w.tbufs[bufIdx][:]), CommPBuf)
+				l, err := commp.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1, bytes.NewReader(w.tbufs[bufIdx][:]), CommPBuf)
 				leaf <- ciderr{
 					c:   l,
 					err: err,
@@ -107,7 +107,7 @@ func (w *Writer) Sum() (DataCIDSize, error) {
 		}
 
 		r, sz := padreader.New(bytes.NewReader(w.buf[:lastLen]), uint64(lastLen))
-		p, err := ffiwrapper.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1, r, sz)
+		p, err := commp.GeneratePieceCIDFromFile(abi.RegisteredSealProof_StackedDrg32GiBV1, r, sz)
 		if err != nil {
 			return DataCIDSize{}, err
 		}
@@ -145,7 +145,7 @@ func (w *Writer) Sum() (DataCIDSize, error) {
 		}
 	}
 
-	p, err := ffi.GenerateUnsealedCID(abi.RegisteredSealProof_StackedDrg64GiBV1, pieces)
+	p, err := nonffi.GenerateUnsealedCID(abi.RegisteredSealProof_StackedDrg64GiBV1, pieces)
 	if err != nil {
 		return DataCIDSize{}, xerrors.Errorf("generating unsealed CID: %w", err)
 	}
