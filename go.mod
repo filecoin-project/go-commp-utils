@@ -9,6 +9,7 @@ require (
 	github.com/filecoin-project/go-padreader v0.0.1
 	github.com/filecoin-project/go-state-types v0.14.0
 	github.com/ipfs/go-cid v0.4.1
+	github.com/minio/sha256-simd v1.0.1
 	github.com/multiformats/go-multihash v0.2.1
 	github.com/stretchr/testify v1.9.0
 	golang.org/x/xerrors v0.0.0-20240716161551-93cc26a95ae9
@@ -24,7 +25,6 @@ require (
 	github.com/klauspost/cpuid/v2 v2.2.4 // indirect
 	github.com/kr/pretty v0.2.0 // indirect
 	github.com/minio/blake2b-simd v0.0.0-20160723061019-3f5f724cb5b1 // indirect
-	github.com/minio/sha256-simd v1.0.1 // indirect
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/multiformats/go-base32 v0.0.4 // indirect
 	github.com/multiformats/go-base36 v0.1.0 // indirect

@@ -1,4 +1,4 @@
-package nonffi
+package commp
 
 import (
 	"errors"
