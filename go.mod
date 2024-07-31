@@ -3,7 +3,6 @@ module github.com/filecoin-project/go-commp-utils
 go 1.21
 
 require (
-	github.com/filecoin-project/go-commp-utils/nonffi v0.0.0-20220905160352-62059082a837
 	github.com/filecoin-project/go-fil-commcid v0.1.0
 	github.com/filecoin-project/go-fil-commp-hashhash v0.2.0
 	github.com/filecoin-project/go-padreader v0.0.1
