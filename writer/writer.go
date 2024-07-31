@@ -12,7 +12,6 @@ import (
 	"github.com/filecoin-project/go-state-types/abi"
 
 	commp "github.com/filecoin-project/go-commp-utils"
-	"github.com/filecoin-project/go-commp-utils/nonffi"
 	"github.com/filecoin-project/go-commp-utils/zerocomm"
 )
 
@@ -145,7 +144,7 @@ func (w *Writer) Sum() (DataCIDSize, error) {
 		}
 	}
 
-	p, err := nonffi.GenerateUnsealedCID(abi.RegisteredSealProof_StackedDrg64GiBV1, pieces)
+	p, err := commp.GenerateUnsealedCID(abi.RegisteredSealProof_StackedDrg64GiBV1, pieces)
 	if err != nil {
 		return DataCIDSize{}, xerrors.Errorf("generating unsealed CID: %w", err)
 	}
