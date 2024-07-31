@@ -17,6 +17,11 @@ type stackFrame struct {
 	commP []byte
 }
 
+// GenerateUnsealedCID generates the UnsealedCID (CommD) for a sector of size determined by the
+// proofType from the provided pieceInfos by merkleization the CommPs of the pieces.
+//
+// This function **assumes** that the pieces are already padded to the sector size and may not
+// return the correct result if this is not the case.
 func GenerateUnsealedCID(proofType abi.RegisteredSealProof, pieceInfos []abi.PieceInfo) (cid.Cid, error) {
 	spi, found := abi.SealProofInfos[proofType]
 	if !found {
