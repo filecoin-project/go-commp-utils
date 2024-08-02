@@ -17,12 +17,13 @@ type stackFrame struct {
 	commP []byte
 }
 
-// GenerateUnsealedCID generates the UnsealedCID (CommD) for a sector of size determined by the
-// proofType from the provided pieceInfos by merkleization the CommPs of the pieces.
+// PieceAggregateCommP generates an aggregate CommP for a list of pieces that combine in size up to
+// the sector size determined by the proofType parameter.
 //
-// This function **assumes** that the pieces are already padded to the sector size and may not
-// return the correct result if this is not the case.
-func GenerateUnsealedCID(proofType abi.RegisteredSealProof, pieceInfos []abi.PieceInfo) (cid.Cid, error) {
+// This function makes no assumptions, other than maximum size, about the pieces that you include.
+// To create a correctly formed UnsealedCID (CommD) for a sector using this method, you should first
+// ensure that the pieces add up to the required size.
+func PieceAggregateCommP(proofType abi.RegisteredSealProof, pieceInfos []abi.PieceInfo) (cid.Cid, error) {
 	spi, found := abi.SealProofInfos[proofType]
 	if !found {
 		return cid.Undef, fmt.Errorf("unknown seal proof type %d", proofType)
