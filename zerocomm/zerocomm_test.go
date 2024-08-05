@@ -6,12 +6,11 @@ import (
 	"io"
 	"testing"
 
-	"github.com/filecoin-project/go-commp-utils"
+	"github.com/filecoin-project/go-commp-utils/v2"
+	"github.com/filecoin-project/go-commp-utils/v2/zerocomm"
 	commcid "github.com/filecoin-project/go-fil-commcid"
 	abi "github.com/filecoin-project/go-state-types/abi"
 	"github.com/ipfs/go-cid"
-
-	"github.com/filecoin-project/go-commp-utils/zerocomm"
 )
 
 func TestComms(t *testing.T) {

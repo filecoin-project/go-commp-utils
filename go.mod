@@ -1,4 +1,4 @@
-module github.com/filecoin-project/go-commp-utils
+module github.com/filecoin-project/go-commp-utils/v2
 
 go 1.21
 
