@@ -143,14 +143,14 @@ func (w *Writer) Sum() (DataCIDSize, error) {
 		}
 	}
 
-	p, err := commp.PieceAggregateCommP(abi.RegisteredSealProof_StackedDrg64GiBV1, pieces)
+	p, sz, err := commp.PieceAggregateCommP(abi.RegisteredSealProof_StackedDrg64GiBV1, pieces)
 	if err != nil {
 		return DataCIDSize{}, xerrors.Errorf("generating unsealed CID: %w", err)
 	}
 
 	return DataCIDSize{
 		PayloadSize: rawLen,
-		PieceSize:   abi.PaddedPieceSize(len(leaves)) * commPBufPad,
+		PieceSize:   sz,
 		PieceCID:    p,
 	}, nil
 }

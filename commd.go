@@ -25,13 +25,13 @@ type stackFrame struct {
 // This function makes no assumptions, other than maximum size, about the pieces that you include.
 // To create a correctly formed UnsealedCID (CommD) for a sector using this method, you should first
 // ensure that the pieces add up to the required size.
-func PieceAggregateCommP(proofType abi.RegisteredSealProof, pieceInfos []abi.PieceInfo) (cid.Cid, error) {
+func PieceAggregateCommP(proofType abi.RegisteredSealProof, pieceInfos []abi.PieceInfo) (cid.Cid, abi.PaddedPieceSize, error) {
 	spi, found := abi.SealProofInfos[proofType]
 	if !found {
-		return cid.Undef, fmt.Errorf("unknown seal proof type %d", proofType)
+		return cid.Undef, 0, fmt.Errorf("unknown seal proof type %d", proofType)
 	}
 	if len(pieceInfos) == 0 {
-		return cid.Undef, errors.New("no pieces provided")
+		return cid.Undef, 0, errors.New("no pieces provided")
 	}
 
 	maxSize := uint64(spi.SectorSize)
@@ -41,18 +41,18 @@ func PieceAggregateCommP(proofType abi.RegisteredSealProof, pieceInfos []abi.Pie
 	// sancheck everything
 	for i, p := range pieceInfos {
 		if p.Size < 128 {
-			return cid.Undef, fmt.Errorf("invalid Size of PieceInfo %d: value %d is too small", i, p.Size)
+			return cid.Undef, 0, fmt.Errorf("invalid Size of PieceInfo %d: value %d is too small", i, p.Size)
 		}
 		if uint64(p.Size) > maxSize {
-			return cid.Undef, fmt.Errorf("invalid Size of PieceInfo %d: value %d is larger than sector size of SealProofType %d", i, p.Size, proofType)
+			return cid.Undef, 0, fmt.Errorf("invalid Size of PieceInfo %d: value %d is larger than sector size of SealProofType %d", i, p.Size, proofType)
 		}
 		if bits.OnesCount64(uint64(p.Size)) != 1 {
-			return cid.Undef, fmt.Errorf("invalid Size of PieceInfo %d: value %d is not a power of 2", i, p.Size)
+			return cid.Undef, 0, fmt.Errorf("invalid Size of PieceInfo %d: value %d is not a power of 2", i, p.Size)
 		}
 
 		cp, err := commcid.CIDToPieceCommitmentV1(p.PieceCID)
 		if err != nil {
-			return cid.Undef, fmt.Errorf("invalid PieceCid for PieceInfo %d: %w", i, err)
+			return cid.Undef, 0, fmt.Errorf("invalid PieceCid for PieceInfo %d: %w", i, err)
 		}
 		todo[i] = stackFrame{size: uint64(p.Size), commP: cp}
 	}
@@ -106,10 +106,12 @@ func PieceAggregateCommP(proofType abi.RegisteredSealProof, pieceInfos []abi.Pie
 	}
 
 	if stack[0].size > maxSize {
-		return cid.Undef, fmt.Errorf("provided pieces sum up to %d bytes, which is larger than sector size of SealProofType %d", stack[0].size, proofType)
+		return cid.Undef, 0, fmt.Errorf("provided pieces sum up to %d bytes, which is larger than sector size of SealProofType %d", stack[0].size, proofType)
 	}
 
-	return commcid.PieceCommitmentV1ToCID(stack[0].commP)
+	fincid, err := commcid.PieceCommitmentV1ToCID(stack[0].commP)
+
+	return fincid, abi.PaddedPieceSize(stack[0].size), err
 }
 
 var s256pool = sync.Pool{New: func() any { return sha256simd.New() }}
