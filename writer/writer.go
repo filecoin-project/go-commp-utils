@@ -5,11 +5,10 @@ import (
 	"math/bits"
 	"runtime"
 
-	"github.com/ipfs/go-cid"
-	"golang.org/x/xerrors"
-
 	"github.com/filecoin-project/go-padreader"
 	"github.com/filecoin-project/go-state-types/abi"
+	"github.com/ipfs/go-cid"
+	"golang.org/x/xerrors"
 
 	commp "github.com/filecoin-project/go-commp-utils/v2"
 	"github.com/filecoin-project/go-commp-utils/v2/zerocomm"

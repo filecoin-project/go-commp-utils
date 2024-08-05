@@ -14,7 +14,8 @@ import (
 // GeneratePieceCIDFromFile generates an a piece cid from an io.Reader
 func GeneratePieceCIDFromFile(proofType abi.RegisteredSealProof, piece io.Reader, pieceSize abi.UnpaddedPieceSize) (cid.Cid, error) {
 	var cc commphh.Calc
-	if _, err := io.Copy(&cc, piece); err != nil {
+	expectedBytes := int64(pieceSize)
+	if _, err := io.CopyN(&cc, piece, expectedBytes); err != nil {
 		return cid.Undef, err
 	}
 	p, _, err := cc.Digest()
