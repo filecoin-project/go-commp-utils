@@ -3,7 +3,9 @@ package commp
 import (
 	"errors"
 	"fmt"
+	"hash"
 	"math/bits"
+	"sync"
 
 	"github.com/filecoin-project/go-commp-utils/zerocomm"
 	commcid "github.com/filecoin-project/go-fil-commcid"
@@ -110,11 +112,14 @@ func PieceAggregateCommP(proofType abi.RegisteredSealProof, pieceInfos []abi.Pie
 	return commcid.PieceCommitmentV1ToCID(stack[0].commP)
 }
 
-var s256 = sha256simd.New()
+var s256pool = sync.Pool{New: func() any { return sha256simd.New() }}
 
 func zeroCommForSize(s uint64) []byte { return zerocomm.PieceComms[bits.TrailingZeros64(s)-7][:] }
 
 func reduceStack(s []stackFrame) []stackFrame {
+
+	s256 := s256pool.Get().(hash.Hash)
+
 	for len(s) > 1 && s[len(s)-2].size == s[len(s)-1].size {
 
 		s256.Reset()
@@ -130,6 +135,8 @@ func reduceStack(s []stackFrame) []stackFrame {
 
 		s = s[:len(s)-1]
 	}
+
+	s256pool.Put(s256)
 
 	return s
 }
