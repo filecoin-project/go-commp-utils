@@ -26,7 +26,7 @@ func TestGenerateUnsealedCID(t *testing.T) {
 
 	expCommD := cidMustParse("baga6ea4seaqiw3gbmstmexb7sqwkc5r23o3i7zcyx5kr76pfobpykes3af62kca")
 
-	commD, _ := commp.PieceAggregateCommP(
+	commD, sizeD, _ := commp.PieceAggregateCommP(
 		abi.RegisteredSealProof_StackedDrg32GiBV1_1, // 32G sector SP
 		[]abi.PieceInfo{
 			{PieceCID: cidMustParse("baga6ea4seaqknzm22isnhsxt2s4dnw45kfywmhenngqq3nc7jvecakoca6ksyhy"), Size: 256 << 20},  // https://filfox.info/en/deal/3755444
@@ -48,6 +48,10 @@ func TestGenerateUnsealedCID(t *testing.T) {
 
 	if commD != expCommD {
 		t.Fatalf("calculated commd for sector f01392893:139074 as %s, expected %s", commD, expCommD)
+	}
+
+	if sizeD != 32<<30 {
+		t.Fatalf("calculated size for sector f01392893:139074 as %d, expected 32GiB", sizeD)
 	}
 }
 
