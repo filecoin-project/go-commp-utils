@@ -111,7 +111,7 @@ func PieceAggregateCommP(proofType abi.RegisteredSealProof, pieceInfos []abi.Pie
 
 	fincid, err := commcid.PieceCommitmentV1ToCID(stack[0].commP)
 
-	return fincid, abi.PaddedPieceSize(stack[0].size), err
+	return fincid, abi.PaddedPieceSize(stack[0].size / 2), err
 }
 
 var s256pool = sync.Pool{New: func() any { return sha256simd.New() }}
