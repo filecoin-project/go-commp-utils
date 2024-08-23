@@ -1,6 +1,6 @@
 module github.com/filecoin-project/go-commp-utils/v2
 
-go 1.21
+go 1.22
 
 require (
 	github.com/filecoin-project/go-fil-commcid v0.2.0
