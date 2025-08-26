@@ -10,7 +10,7 @@ require (
 	github.com/ipfs/go-cid v0.5.0
 	github.com/minio/sha256-simd v1.0.1
 	github.com/multiformats/go-multihash v0.2.3
-	github.com/stretchr/testify v1.10.0
+	github.com/stretchr/testify v1.11.0
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 )
 
