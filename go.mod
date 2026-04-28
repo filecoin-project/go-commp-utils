@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/filecoin-project/go-fil-commcid v0.3.1
-	github.com/filecoin-project/go-fil-commp-hashhash v0.3.0
+	github.com/filecoin-project/go-fil-commp-hashhash v0.4.0
 	github.com/filecoin-project/go-padreader v0.0.1
 	github.com/filecoin-project/go-state-types v0.18.0
 	github.com/ipfs/go-cid v0.6.0
