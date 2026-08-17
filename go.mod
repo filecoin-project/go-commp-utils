@@ -10,12 +10,11 @@ require (
 	github.com/ipfs/go-cid v0.6.2
 	github.com/minio/sha256-simd v1.0.1
 	github.com/multiformats/go-multihash v0.2.3
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.0
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da
 )
 
 require (
-	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/filecoin-project/go-address v1.2.0 // indirect
 	github.com/ipfs/boxo v0.34.0 // indirect
 	github.com/ipfs/go-block-format v0.2.3 // indirect
@@ -29,7 +28,6 @@ require (
 	github.com/multiformats/go-multibase v0.3.0 // indirect
 	github.com/multiformats/go-multicodec v0.9.2 // indirect
 	github.com/multiformats/go-varint v0.1.0 // indirect
-	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/polydawn/refmt v0.89.1-0.20231129105047-37766d95467a // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/whyrusleeping/cbor-gen v0.3.1 // indirect
